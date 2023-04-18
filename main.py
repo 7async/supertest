@@ -1,34 +1,31 @@
-import time
-import undetected_chromedriver as uc
-from selenium.webdriver.common.by import By
+import aiogram
+
+from aiogram import types, executor
+from aiogram import Bot, Dispatcher
+
+from pprint import pformat
 
 
-options = uc.ChromeOptions()
-options.add_argument('--headless')
-
-driver= uc.Chrome(options=options)
-driver.implicitly_wait(13)
-
-url = 'https://www.ligastavok.ru/cybersport/dota-2'
-
-driver.get(url)
+token = '6087130044:AAGZuZ6DKZcMemELYHaQlyhM4dhr-opBPGs'
+bot = Bot(token)
+dp = Dispatcher(bot)
 
 
-elements = []
-for i in range(1, 30):
+@dp.message_handler(commands=['start'])
+async def on_start(message: types.Message):
+    result = await parse_dota2_matches()
+    s = ''
+    for value in result.values():
+        for team, fact in value.items():
+            s += '{0} - {1} |'.format(team, fact)
+        s += '\n'
+    await message.answer(s[:4000])
 
-    try:    
-        team1 = driver.find_element(By.XPATH, f'//*[@id="content"]/div[1]/div/ul/li[{i}]/div/div[2]/div[1]/div[1]/p')
-        team2 = driver.find_element(By.XPATH, f'//*[@id="content"]/div[1]/div/ul/li[{i}]/div/div[2]/div[1]/div[3]/p')
+@dp.message_handler(commands=['test'])
+async def on_test(message: types.Message):
+    await message.answer('test!')
 
-        fact1 = driver.find_element(By.XPATH, f'//*[@id="content"]/div[1]/div/ul/li[{i}]/div/div[2]/div[2]/div/div[1]/button/span[2]')
-        fact2 = driver.find_element(By.XPATH, f'//*[@id="content"]/div[1]/div/ul/li[{i}]/div/div[2]/div[2]/div/div[2]/button/span[2]')
-            
-        print(team1.get_attribute('innerHTML'), team2.get_attribute('innerHTML'))
-        print(fact1.get_attribute('innerHTML'), fact2.get_attribute('innerHTML'))
-    except:
-        print('skipped')
+def on_shutdown(arg):
+    driver.quit()
 
-#/html/body/div[1]/div[2]/div[2]/div/div[1]/div/ul/li[1]/div/div[2]
-#/html/body/div[1]/div[2]/div[2]/div/div[1]/div/ul/li[2]/div/div[2]
-#/html/body/div[1]/div[2]/div[2]/div/div[1]/div/ul/li[3]/div/div[2]
+executor.start_polling(dp, skip_updates=True, on_shutdown=on_shutdown)
