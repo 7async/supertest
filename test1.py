@@ -76,15 +76,14 @@ async def extract():
     logging.info('Waiting 15 seconds...')
     await asyncio.sleep(15)
 
+    if len(driver.page_source) < 100000:
+        await asyncio.sleep(5)
+
     page = driver.page_source
     d = _extract(page)
     logging.info('Closing driver...')
     driver.quit()
     logging.info('Driver closed')
-
-    logging.info('Writing down page to file...')
-
-    await asyncio.sleep(5)
 
     end = time.perf_counter()
 
