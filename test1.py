@@ -1,5 +1,6 @@
 import time
 import logging
+import asyncio
 import undetected_chromedriver as uc
 
 from lxml import html
@@ -11,7 +12,7 @@ from undetected_chromedriver.webelement import By
 logging.basicConfig(level=logging.INFO)
 
 
-def extract(text: str) -> defaultdict:
+def _extract(text: str) -> defaultdict:
     tree = html.fromstring(text)
     d = defaultdict(lambda: (1, 1))
 
@@ -50,41 +51,43 @@ def extract(text: str) -> defaultdict:
 
 # 'https://betboom.ru/esport'
 
-url = 'https://www.ligastavok.ru/cybersport/all'
+async def extract():
 
-start = time.perf_counter()
+    url = 'https://www.ligastavok.ru/cybersport/all'
 
-logging.info('Starting...')
+    start = time.perf_counter()
 
-options = uc.ChromeOptions()
-options.add_argument('--headless')
+    logging.info('Starting...')
 
-driver = uc.Chrome(options=options)
-driver.implicitly_wait(10)
+    options = uc.ChromeOptions()
+    options.add_argument('--headless')
 
-end = time.perf_counter()
-print(end - start)
-start = time.perf_counter()
+    driver = uc.Chrome(options=options)
+    driver.implicitly_wait(10)
 
-logging.info('Getting page...')
-driver.get(url)
+    end = time.perf_counter()
+    print(end - start)
+    start = time.perf_counter()
 
-logging.info('Page is loaded')
-logging.info('Waiting 15 seconds...')
-time.sleep(15)
-page = driver.page_source
-logging.info('Closing driver...')
-driver.quit()
-logging.info('Driver closed')
+    logging.info('Getting page...')
+    driver.get(url)
 
-logging.info('Writing down page to file...')
+    logging.info('Page is loaded')
+    logging.info('Waiting 15 seconds...')
+    await asyncio.sleep(15)
 
-# print(page, file=open('page.html', 'w', encoding='utf-8'))
+    page = driver.page_source
+    d = _extract(page)
+    logging.info('Closing driver...')
+    driver.quit()
+    logging.info('Driver closed')
 
-time.sleep(5)
+    logging.info('Writing down page to file...')
 
-pp(extract(page))
+    await asyncio.sleep(5)
 
-end = time.perf_counter()
+    end = time.perf_counter()
 
-print(end - start)
+    print(end - start)
+
+    return d
